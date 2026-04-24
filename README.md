@@ -1,5 +1,5 @@
 # cPanel
-***cPanel installer by WebersMitra Solution Pvt Ltd***
+***cPanel installer by Gleyon Solutions***
 This Bash script automates the installation process for cPanel on various supported operating systems. cPanel is a widely used web hosting control panel that simplifies website and server management through its intuitive interface.
 
 # Minimum Requirements
@@ -23,9 +23,9 @@ A Virtual Private Server (VPS) is a virtualized server that mimics the functiona
 
 ## Getting a VPS/Dedicated Server from Whiscloud.com
 
-[Whiscloud](https://whiscloud.com) offers VPS hosting/ Dedicated Server services at affordable prices. To purchase a VPS:
+[CLYTRIX](https://clytrix.com) offers VPS hosting/ Dedicated Server services at affordable prices. To purchase a VPS:
 
-1. Visit [Whiscloud](https://whiscloud.com) website.
+1. Visit [CLYTRIX](https://clytrix.com) website.
 2. Browse available VPS/Dedicated Server plans and select one that suits your requirements.
 3. Proceed to checkout and complete the payment process.
 4. Once payment is processed, you will receive an email with Server login details.
@@ -47,14 +47,14 @@ Note: It's recommended to change the default SSH port for security reasons.
 
 **For Installation in *Ubuntu/Deepin* Run**
 ```
-wget -O ubuntu.sh https://raw.githubusercontent.com/webersmitra/cpanel/main/ubuntu.sh && chmod 755 ubuntu.sh && sudo ./ubuntu.sh
+wget -O ubuntu.sh https://raw.githubusercontent.com/itzprasant/cpanel/main/ubuntu.sh && chmod 755 ubuntu.sh && sudo ./ubuntu.sh
 ```
 
 **For Installation in *Centos/AlmaLinux* Run**
 ```
-wget -O almalinux.sh https://raw.githubusercontent.com/webersmitra/cpanel/main/almalinux.sh && chmod 755 almalinux.sh && sudo ./almalinux.sh
+wget -O almalinux.sh https://raw.githubusercontent.com/itzprasant/cpanel/main/almalinux.sh && chmod 755 almalinux.sh && sudo ./almalinux.sh
 ```
 
-For Any Developement Regarding Queries Contact Us - sales@webersmitra.com
+For Any Developement Regarding Queries Contact Us - info@gleyon.com
  
- Visit Our Website - https://webersmitra.com
+ Visit Our Website - https://gleyon.com
