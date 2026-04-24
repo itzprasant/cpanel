@@ -4,110 +4,155 @@
 # Colors
 # ----------------------------------
 NC='\033[0m'
-RED='\033[0;31m'
 GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-LIGHTGRAY='\033[0;37m'
-DARKGRAY='\033[1;30m'
-LIGHTRED='\033[1;31m'
-LIGHTGREEN='\033[1;32m'
 YELLOW='\033[1;33m'
-LIGHTBLUE='\033[1;34m'
-LIGHTPURPLE='\033[1;35m'
-LIGHTCYAN='\033[1;36m'
-WHITE='\033[1;37m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
 
-sleep 1
-echo "-------------------------------------"
-echo "          cPanel Installer           "
-echo "Author: Gleyon Solution        "
-echo "Copyright: GNU General Public License"
-echo "Supported OS: Centos/AlmaLinux       "
-echo "Version: 1.0.5                       "
-echo "Release Date: 25/12/2023            "
-echo "Credits: cPanel/WHM, Github          "
-echo "-------------------------------------"
-sleep 1
+LOG_FILE="/root/cpanel_install.log"
+exec > >(tee -i $LOG_FILE)
+exec 2>&1
+
+clear
+echo "======================================"
+echo "     CLYTRIX CPANEL INSTALLER v2.0"
+echo "======================================"
+
+# ----------------------------------
+# Root Check
+# ----------------------------------
+if [ "$EUID" -ne 0 ]; then
+  echo -e "${RED}Run as ROOT${NC}"
+  exit 1
+fi
+
+# ----------------------------------
+# Hostname Setup (Validation Added)
+# ----------------------------------
 echo ""
+echo -e "${CYAN}Enter a valid FQDN hostname (e.g. server.yourdomain.com):${NC}"
+read HOST
 
-echo -e "${YELLOW}What Hostname would you like to keep?${NC}"
-read host
-if [[ "$host" ]];then
-hostnamectl set-hostname $host --static
+if [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ && "$HOST" == *.* ]]; then
+    hostnamectl set-hostname $HOST
+    echo -e "${GREEN}Hostname set to $HOST${NC}"
 else
-echo -e "${RED}You did not enter a HostName, Goodbye${NC}"
-exit
+    echo -e "${RED}Invalid hostname!${NC}"
+    exit 1
 fi
-sleep 1
-echo -e "${GREEN}Your Hostname is set to '"$host"'${NC}"
 
-echo "Installation would start in 10sec. To Cancel Installation,Click Ctrl+C"
-sleep 10
+# ----------------------------------
+# Server Check
+# ----------------------------------
+echo ""
+echo -e "${CYAN}Checking Server Requirements...${NC}"
 
-echo -e "${YELLOW}Updating System${NC}"
-sleep 1
-yum -y update > /dev/null 2>&1 && yum -y upgrade > /dev/null 2>&1
-yum -y install epel-release > /dev/null 2>&1
-yum -y install perl > /dev/null 2>&1
-yum -y install curl > /dev/null 2>&1
+RAM=$(free -m | awk '/Mem:/ {print $2}')
+CPU=$(nproc)
 
-echo -e "${YELLOW}Setting Up the Network${NC}"
-sleep 1
-echo "nameserver 8.8.8.8" >> /etc/resolv.conf
-echo "nameserver 8.8.4.4" >> /etc/resolv.conf
-echo "nameserver 1.1.1.1" >> /etc/resolv.conf
-systemctl stop NetworkManager > /dev/null 2>&1
-systemctl disable NetworkManager > /dev/null 2>&1
-inth=$(netstat -i | grep '^[a-z]' | awk '{print $1}' | grep -v 'lo')
-FILE=/etc/sysconfig/network-scripts/ifcfg-$inth
-if test -f "$FILE"; then
-sed -i 's/NM_CONTROLLED=yes/NM_CONTROLLED=no/g' /etc/sysconfig/network-scripts/ifcfg-eth0 > /dev/null 2>&1
-sed -i 's/ONBOOT=no/ONBOOT=yes/g' /etc/sysconfig/network-scripts/ifcfg-eth0 > /dev/null 2>&1
+echo "RAM: $RAM MB | CPU: $CPU Cores"
+
+if [ "$RAM" -lt 2048 ]; then
+    echo -e "${RED}Minimum 2GB RAM recommended for cPanel${NC}"
 fi
-LO=/etc/sysconfig/network-scripts/ifcfg-lo > /dev/null 2>&1
-if test -f "$LO"; then
-sed -i 's/NM_CONTROLLED=yes/NM_CONTROLLED=no/g' /etc/sysconfig/network-scripts/ifcfg-lo > /dev/null 2>&1
-sed -i 's/ONBOOT=no/ONBOOT=yes/g' /etc/sysconfig/network-scripts/ifcfg-lo > /dev/null 2>&1
-fi
-systemctl enable network.service > /dev/null 2>&1
-systemctl start network.service > /dev/null 2>&1
 
-echo -e "${YELLOW}Installing cPanel/WHM and Packages${NC}"
-sleep 1
-echo "CPANEL=stable" >> /etc/cpupdate.conf
-echo "RPMUP=daily" >> /etc/cpupdate.conf
-echo "SARULESUP=daily" >> /etc/cpupdate.conf
-echo "STAGING_DIR=/usr/local/cpanel" >> /etc/cpupdate.conf
-echo "UPDATES=manual" >> /etc/cpupdate.conf
+# ----------------------------------
+# System Update
+# ----------------------------------
+echo ""
+echo -e "${CYELLOW}Updating System...${NC}"
+yum update -y
+
+yum install -y perl curl nano
+
+# ----------------------------------
+# Disable NetworkManager (safer way)
+# ----------------------------------
+systemctl is-active --quiet NetworkManager && {
+    echo -e "${YELLOW}Disabling NetworkManager...${NC}"
+    systemctl stop NetworkManager
+    systemctl disable NetworkManager
+}
+
+# ----------------------------------
+# Install cPanel
+# ----------------------------------
+echo ""
+echo -e "${CYAN}Installing cPanel/WHM...${NC}"
+
 cd /home
 curl -o latest -L https://securedownloads.cpanel.net/latest
-echo""
-echo -e "${GREEN}Sit Back and Relax! Installation has started${NC}"
-echo -e "${GREEN}Installation takes 20-30min or more depending upon CPU ${NC}"
-sh latest > /etc/cpanel_install.log
 
-echo -e "${RED}Errors(warn) May be Shown. Don't Worry!${NC}"
+echo -e "${GREEN}Installation started (20-40 mins)...${NC}"
+sh latest
+
+# ----------------------------------
+# Post Install Check
+# ----------------------------------
+if systemctl is-active --quiet cpanel; then
+
 echo ""
-echo -e "${YELLOW}All Packages Installed. Finishing Installation${NC}"
-sleep 1
-hostnamectl set-hostname $host --static
-yum -y install nano > /dev/null 2>&1
+echo "======================================"
+echo -e "${GREEN}CPANEL INSTALLED SUCCESSFULLY 🎉${NC}"
+echo "======================================"
 
-if (systemctl -q is-active cpanel.service); then
-  echo ""
-  echo -e "${YELLOW}Everything set! Server needs a Reboot. Reboot Now(Y/N)${NC}"
-  read RBOOT
-  echo -e "${GREEN}Goodbye!${NC}"
-  if [[ "$RBOOT" == "Y" || "$RBOOT" == "y" ]]
-  then
-  reboot
-  else
-  echo -e "${GREEN}Goodbye!${NC}"
-  fi
+IP=$(curl -s https://api.ipify.org)
+
+echo -e "WHM URL: ${CYAN}https://$IP:2087${NC}"
+echo -e "Login: root"
+echo -e "Log File: $LOG_FILE"
+
+# ----------------------------------
+# POST INSTALL WIZARD
+# ----------------------------------
+echo ""
+echo -e "${CYAN}Post Installation Optimization Wizard${NC}"
+
+# Firewall
+read -p "Install CSF Firewall? (y/n): " CSF
+if [[ "$CSF" =~ ^[Yy]$ ]]; then
+    cd /usr/src
+    rm -fv csf.tgz
+    wget https://download.configserver.com/csf.tgz
+    tar -xzf csf.tgz
+    cd csf
+    sh install.sh
+    echo -e "${GREEN}CSF Installed${NC}"
+fi
+
+# Fail2Ban
+read -p "Install Fail2Ban? (y/n): " F2B
+if [[ "$F2B" =~ ^[Yy]$ ]]; then
+    yum install -y fail2ban
+    systemctl enable fail2ban
+    systemctl start fail2ban
+    echo -e "${GREEN}Fail2Ban Enabled${NC}"
+fi
+
+# LiteSpeed Suggestion
+echo ""
+echo -e "${YELLOW}LiteSpeed is recommended for high performance.${NC}"
+echo -e "Visit: https://litespeedtech.com"
+
+# CloudLinux Suggestion
+echo -e "${YELLOW}CloudLinux improves stability & isolation.${NC}"
+echo -e "Visit: https://www.cloudlinux.com"
+
+# MySQL Tuning Tip
+echo ""
+echo -e "${CYAN}Recommended Next Steps:${NC}"
+echo "- Secure SSH (change port, disable root login)"
+echo "- Enable backups in WHM"
+echo "- Configure AutoSSL"
+echo "- Tune MySQL based on RAM"
+
+# Reboot Option
+echo ""
+read -p "Reboot server now? (y/n): " RB
+if [[ "$RB" =~ ^[Yy]$ ]]; then
+    reboot
+fi
+
 else
-  echo -e "${RED}cPanel Installation Failed or cPanel Service has Failed. Please Check Log File Available at /etc/cpanel_install.log ${NC}"
-  echo -e "${RED}Goodbye!${NC}"
+    echo -e "${RED}Installation Failed. Check logs at $LOG_FILE${NC}"
 fi
