@@ -2,6 +2,13 @@
 ***cPanel installer by Gleyon Solutions***
 This Bash script automates the installation process for cPanel on various supported operating systems. cPanel is a widely used web hosting control panel that simplifies website and server management through its intuitive interface.
 
+# Installation Command
+
+**For Installation Run**
+```
+wget -O ubuntu.sh https://raw.githubusercontent.com/itzprasant/cpanel/main/install.sh && chmod 755 install.sh && sudo ./install.sh
+```
+
 # Minimum Requirements
 To successfully install and run cPanel, ensure that your system meets the following minimum requirements:
 
@@ -42,18 +49,6 @@ PuTTY is a popular SSH client for Windows that allows connecting to a remote ser
 6. You will be prompted for a username (usually "root") and password provided by your VPS provider.
 
 Note: It's recommended to change the default SSH port for security reasons.
-
-# Installation Command
-
-**For Installation in *Ubuntu/Deepin* Run**
-```
-wget -O ubuntu.sh https://raw.githubusercontent.com/itzprasant/cpanel/main/ubuntu.sh && chmod 755 ubuntu.sh && sudo ./ubuntu.sh
-```
-
-**For Installation in *Centos/AlmaLinux* Run**
-```
-wget -O almalinux.sh https://raw.githubusercontent.com/itzprasant/cpanel/main/almalinux.sh && chmod 755 almalinux.sh && sudo ./almalinux.sh
-```
 
 For Any Developement Regarding Queries Contact Us - info@gleyon.com
  
