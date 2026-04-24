@@ -23,7 +23,7 @@ WHITE='\033[1;37m'
 sleep 1
 echo "-------------------------------------"
 echo "          cPanel Installer           "
-echo "Author: Webers Mitra Solution        "
+echo "Author: Gleyon Solution        "
 echo "Copyright: GNU General Public License"
 echo "Supported OS: Centos/AlmaLinux       "
 echo "Version: 1.0.5                       "
